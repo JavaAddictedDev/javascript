@@ -27,10 +27,7 @@ const usuario1 = {
 						valor: 42.00,
 						quantidade: 4
 					}
-				],
-				opcoes: {
-					subtrair_presenteados: true,
-				}
+				]
 			},
 			
 			lista_de_desejo: [
@@ -40,14 +37,14 @@ const usuario1 = {
 					nome: 'produto 3',
 					valor: 25.90,
 					quantidade: 2,
-					presenteavel: true
+					presente: true
 				},
 				{
 					id: 428,
 					nome: 'produto 1',
 					valor: 29.90,
 					quantidade: 1,
-					presenteavel: false
+					presente: false
 				}
 			]
 		}
@@ -70,32 +67,51 @@ const usuario1 = {
 							quantidade: 3
 						}
 					],
-					opcoes: {
-						subtrair_presenteados: true,
-					}
 				},
 				lista_de_desejo: [],
-				presentearUsuario: presentearUsuario
+				presentearUsuario: presentearUsuario,
+				finalizarCarrinho: realizarPagamento
 		}
 
-		function presentearUsuario(remetente) {
+		function presentearUsuario(destinatario, finalizarComCarrinho = false) {
 
-			let listaDeDesejos = Array.from(remetente.lista_de_desejo)
+			let presentes = Array.from(destinatario.lista_de_desejo).filter(item => item.presente)
 
-			listaDeDesejos.forEach(item => {
-				delete item.presenteavel
-				// Object.defineProperty(item, 'remetente', {value: remetente.id, writable:false, configurable:false})
-				Object.defineProperties(item, {
-					presente: 	{ value: true, writable:false, configurable:false },
-					remetente: 	{ value: remetente.id, writable:false, configurable:false }
+			if(!finalizarComCarrinho) {
+
+				let carrinhoTemporario = {}
+
+				Object.defineProperties(carrinhoTemporario, {
+					items: 			{ value: presentes, writable:false, configurable:false },
+					destinatario: 	{ value: destinatario.id, writable:false, configurable:false }
 				})
-			})
-			
-			let itensCarrinhoAtualizados =  [...this.carrinho.itens, ...listaDeDesejos]
+				
+				this.finalizarCarrinho(carrinhoTemporario);
+				
+			} else {
 
-			Object.defineProperty(this.carrinho, 'itens',{value: itensCarrinhoAtualizados, writable:false })
-			
-			console.log(this.carrinho);
+				presentes.forEach(item => {
+					Object.defineProperties(item, {
+						destinatario: 	{ value: destinatario.id, writable:false, configurable:false }
+					})
+				})
+				
+				let itensAtualizados =  [...this.carrinho.itens, ...presentes]
+
+				Object.defineProperty(this.carrinho, 'itens',{ value: itensAtualizados, writable:false, configurable:false })
+
+				this.finalizarCarrinho()
+
+			}
 		}
 
-		usuario2.presentearUsuario(usuario1);
+		function realizarPagamento(carrinhoTemporario = undefined) {
+			if(!carrinhoTemporario) {
+				console.log('ok')
+				console.log(this.carrinho)
+			}
+
+			console.log(carrinhoTemporario)	
+		}
+
+		usuario2.presentearUsuario(usuario1, true);
